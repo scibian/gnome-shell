@@ -1,0 +1,13 @@
+Description: Hide unmanaged network interfaces
+Author: Scibian Packaging Team <packaging@scibian.org>
+
+--- a/js/ui/status/network.js
++++ b/js/ui/status/network.js
+@@ -460,6 +460,7 @@
+         case NetworkManager.DeviceState.UNMANAGED:
+             /* Translators: this is for network devices that are physically present but are not
+                under NetworkManager's control (and thus cannot be used in the menu) */
++            this.item.actor.visible = false;
+             return _("Unmanaged");
+         case NetworkManager.DeviceState.DEACTIVATING:
+             return _("Disconnecting");

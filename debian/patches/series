@@ -5,3 +5,4 @@
 41-handle-logind-fail.patch
 51-Delay-caribou-daemon-invocation.patch
 90-add-wifi-pkcs11-support.patch
+91-hide_unmanaged_network_interfaces.patch
