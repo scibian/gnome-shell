@@ -1,3 +1,11 @@
+gnome-shell (3.14.4-1~deb8u1scibian1) jessie; urgency=low
+
+  * Add WiFi PKCS #11 with PIN support
+  * Hide unmanaged network interfaces
+  * Allow unprivileged users to connect to WiFi networks
+
+ -- Scibian Packaging Team <packaging@scibian.org>  Tue, 06 Sep 2016 16:36:25 +0200
+
 gnome-shell (3.14.4-1~deb8u1) jessie; urgency=low
 
   * New upstream translation and bugfix release.
