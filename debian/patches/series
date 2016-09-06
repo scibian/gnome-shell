@@ -4,3 +4,4 @@
 #30-remoteMenu-Prevent-the-shell-from-becoming-unrespons.patch
 41-handle-logind-fail.patch
 51-Delay-caribou-daemon-invocation.patch
+90-add-wifi-pkcs11-support.patch

@@ -1,0 +1,29 @@
+Description: Add WiFi PKCS #11 with PIN support
+Author: Scibian Packaging Team <packaging@scibian.org>
+
+diff -ru gnome-shell-js-orig/js/ui/components/networkAgent.js gnome-shell-js/js/ui/components/networkAgent.js
+--- gnome-shell-js-orig/js/ui/components/networkAgent.js	2015-05-20 14:58:57.023442947 +0200
++++ gnome-shell-js/js/ui/components/networkAgent.js	2015-05-20 16:44:02.296138443 +0200
+@@ -272,10 +272,18 @@
+                            value: ieee8021xSetting.password || '', password: true });
+             break;
+         case 'tls':
+-            secrets.push({ label: _("Identity: "), key: null,
+-                           value: ieee8021xSetting.identity || '', password: false });
+-            secrets.push({ label: _("Private key password: "), key: 'private-key-password',
+-                           value: ieee8021xSetting.private_key_password || '', password: true });
++	    if(ieee8021xSetting.pkcs11_engine_path.length > 0)
++            {
++                secrets.push({ label: _("Code pin: "), key: 'pin',
++                             value: ieee8021xSetting.pin || '', password: true });
++	    }
++            else
++            {
++		    secrets.push({ label: _("Identity: "), key: null,
++		                   value: ieee8021xSetting.identity || '', password: false });
++		    secrets.push({ label: _("Private key password: "), key: 'private-key-password',
++		                   value: ieee8021xSetting.private_key_password || '', password: true });
++	    }
+             break;
+         default:
+             log('Invalid EAP/IEEE802.1x method: ' + ieee8021xSetting.get_eap_method(0));
