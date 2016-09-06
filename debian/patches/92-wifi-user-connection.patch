@@ -1,0 +1,90 @@
+Description: Allow unprivileged users to connect to WiFi networks
+Author: Scibian Packaging Team <packaging@scibian.org>
+
+--- a/js/ui/status/network.js
++++ b/js/ui/status/network.js
+@@ -7,6 +7,7 @@
+ const Lang = imports.lang;
+ const NetworkManager = imports.gi.NetworkManager;
+ const NMClient = imports.gi.NMClient;
++const Polkit = imports.gi.Polkit;
+ const NMGtk = imports.gi.NMGtk;
+ const Signals = imports.signals;
+ const Shell = imports.gi.Shell;
+@@ -717,11 +718,12 @@
+     Name: 'NMWirelessDialog',
+     Extends: ModalDialog.ModalDialog,
+ 
+-    _init: function(client, device, settings) {
++    _init: function(client, device, settings, privateConnections) {
+         this.parent({ styleClass: 'nm-dialog' });
+ 
+         this._client = client;
+         this._device = device;
++        this._privateConnections = privateConnections;
+ 
+         this._wirelessEnabledChangedId = this._client.connect('notify::wireless-enabled',
+                                                               Lang.bind(this, this._syncView));
+@@ -938,6 +940,11 @@
+                             this._device.get_path(), accessPoints[0].dbus_path]);
+             } else {
+                 let connection = new NetworkManager.Connection();
++                if (this._privateConnections) {
++                    let connectionSetting = new NetworkManager.SettingConnection();
++                    connectionSetting.add_permission('user', GLib.get_user_name(), null);
++                    connection.add_setting(connectionSetting);
++                }
+                 this._client.add_and_activate_connection(connection, this._device, accessPoints[0].dbus_path, null)
+             }
+         }
+@@ -1163,10 +1170,11 @@
+     Name: 'NMDeviceWireless',
+     category: NMConnectionCategory.WIRELESS,
+ 
+-    _init: function(client, device, settings) {
++    _init: function(client, device, settings, privateConnections) {
+         this._client = client;
+         this._device = device;
+         this._settings = settings;
++        this._privateConnections = privateConnections;
+ 
+         this._description = '';
+ 
+@@ -1248,7 +1256,7 @@
+     },
+ 
+     _showDialog: function() {
+-        this._dialog = new NMWirelessDialog(this._client, this._device, this._settings);
++        this._dialog = new NMWirelessDialog(this._client, this._device, this._settings, this._privateConnections);
+         this._dialog.connect('closed', Lang.bind(this, this._dialogClosed));
+         this._dialog.open();
+     },
+@@ -1607,6 +1615,19 @@
+         if (!this._client || !this._settings)
+             return;
+ 
++        // Check if newly created connections should be private or not
++        this._privateConnections = true;
++        let authority = Polkit.Authority.get_sync(null);
++        let credential = new Gio.Credentials();
++        let subject = new Polkit.UnixProcess({ pid: credential.get_unix_pid(), uid: credential.get_unix_user() });
++        let authResult = authority.check_authorization_sync(subject,
++                                                            'org.freedesktop.NetworkManager.settings.modify.system',
++                                                            null /* details */,
++                                                            Polkit.CheckAuthorizationFlags.NONE,
++                                                            null /* cancellable */);
++        if (authResult)
++            this._privateConnections = !authResult.get_is_authorized();
++
+         this._activeConnections = [ ];
+         this._connections = [ ];
+         this._connectivityQueue = [ ];
+@@ -1716,7 +1737,7 @@
+ 
+         let wrapperClass = this._dtypes[device.get_device_type()];
+         if (wrapperClass) {
+-            let wrapper = new wrapperClass(this._client, device, this._settings);
++            let wrapper = new wrapperClass(this._client, device, this._settings, this._privateConnections);
+             device._delegate = wrapper;
+             this._addDeviceWrapper(wrapper);
+ 
